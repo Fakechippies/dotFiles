@@ -1,0 +1,54 @@
+# Starship prompt configuration
+
+format = """
+$directory\
+$git_branch\
+$git_status\
+$character
+"""
+
+[directory]
+format = "[$path]($style) "
+style = "bold white"
+truncation_length = 3
+truncate_to_repo = true
+
+[git_branch]
+format = "[$symbol$branch]($style) "
+symbol = ""
+style = "bold purple"
+
+[git_status]
+format = "[$all_status$ahead_behind]($style) "
+style = "bold yellow"
+conflicted = "✗"
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕"
+up_to_date = "✓"
+untracked = "?"
+stashed = "$"
+modified = "!"
+staged = "+"
+renamed = "»"
+deleted = "✘"
+
+[character]
+success_symbol = "[❯](bold white)"
+error_symbol = "[❯](bold red)"
+
+# Disable modules we don't need
+[cmd_duration]
+disabled = true
+
+[username]
+disabled = true
+
+[hostname]
+disabled = true
+
+[time]
+disabled = true
+
+[battery]
+disabled = true
