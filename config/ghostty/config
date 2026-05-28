@@ -1,9 +1,12 @@
 # Ghostty configuration
 
+command = zsh
+
 # Font
 font-family = "JetBrainsMono Nerd Font"
 font-style = Regular
 font-size = 9
+font-family-bold = "JetBrainsMono Nerd Font"
 
 # Theme
 background = #121212

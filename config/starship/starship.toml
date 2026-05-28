@@ -35,7 +35,9 @@ deleted = "✘"
 
 [character]
 success_symbol = "[❯](bold white)"
-error_symbol = "[❯](bold red)"
+error_symbol = "[✗](bold red)"
+vicmd_symbol = "[❮](bold yellow)"
+
 
 # Disable modules we don't need
 [cmd_duration]

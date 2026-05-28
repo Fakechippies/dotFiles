@@ -1,0 +1,61 @@
+eval "$(starship init zsh)"
+eval "$(navi widget zsh)"
+
+export NAVI_KEYBINDING=alt-y
+
+autoload -Uz compinit
+compinit
+
+export PATH="$PATH:$HOME/.config/.foundry/bin"
+export PATH="$HOME/.opencode/bin:$PATH"
+
+# Created by `pipx` on 2025-11-29 13:42:02
+export PATH="$PATH:$HOME/.local/bin"
+alias exegol='sudo -E $HOME/.local/bin/exegol'
+export EDITOR=vim
+export SYSTEMD_EDITOR=vim
+
+gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita'
+export GOPATH=$HOME/go
+export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+alias packettracer='QT_QPA_PLATFORM=xcb /usr/lib/packettracer/packettracer.AppImage'
+
+# ---- Zsh vi-mode ----
+bindkey -v
+KEYTIMEOUT=20
+#
+# Better insert-mode deletes
+bindkey -M viins '^W' backward-kill-word
+
+# jk to escape
+bindkey -M viins 'jk' vi-cmd-mode
+
+# Ctrl-R history search (vim-mode safe)
+bindkey '^R' history-incremental-search-backward
+bindkey -M viins '^R' history-incremental-search-backward
+bindkey -M vicmd '^R' history-incremental-search-backward
+
+# ---- Zsh history (DO NOT LOSE HISTORY IN ZELLIJ) ----
+HISTFILE=$HOME/.zsh_history
+HISTSIZE=100000
+SAVEHIST=200000
+
+setopt APPEND_HISTORY        # append instead of overwrite
+setopt INC_APPEND_HISTORY    # write each command immediately
+setopt SHARE_HISTORY         # share across panes/sessions
+
+setopt HIST_IGNORE_DUPS      # no immediate duplicates
+setopt HIST_IGNORE_ALL_DUPS  # remove older duplicates
+setopt HIST_REDUCE_BLANKS    # trim useless spaces
+
+# ---- Custom alias ----
+alias bhcli=bloodhound-cli
+alias df=duf
+
+# source "$HOME/.local/share/bash-completion/completions/ludus"
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+export PATH="$HOME/.npm-global/bin:$PATH"
+
+. "$HOME/.local/share/../bin/env"
