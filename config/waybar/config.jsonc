@@ -28,8 +28,7 @@
             "6": "6",
             "7": "7",
             "8": "8",
-            "9": "9",
-            "active": "󱓻"
+            "9": "9"
         },
         "persistent-workspaces": {
             "1": [],
@@ -50,15 +49,17 @@
         "interval": 5,
         "format": "󰍛",
         "tooltip-format": "{usage}%",
-        "on-click": "ghostty -e btop"
+        "on-click": "python3 /home/chips/.config/waybar/control-center.py",
+        "on-click-right": "ghostty -e btop"
     },
     
     "bluetooth": {
-        "format": "",
+        "format": "󰂯",
         "format-disabled": "󰂲",
-        "format-connected": "",
+        "format-connected": "󰂱",
         "tooltip-format": "Devices connected: {num_connections}",
-        "on-click": "blueman-manager"
+        "on-click": "python3 /home/chips/.config/waybar/control-center.py",
+        "on-click-right": "blueman-manager"
     },
     
     "network": {
@@ -71,7 +72,8 @@
         "tooltip-format-ethernet": "⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
         "tooltip-format-disconnected": "Disconnected",
         "interval": 3,
-        "on-click": "nm-connection-editor"
+        "on-click": "python3 /home/chips/.config/waybar/control-center.py",
+        "on-click-right": "nm-connection-editor"
     },
     
     "pulseaudio": {
@@ -81,8 +83,9 @@
 		"default": ["", "", ""]
         },
         "tooltip-format": "Playing at {volume}%",
-        "on-click": "pavucontrol",
-        "on-click-right": "pamixer -t",
+        "on-click": "python3 /home/chips/.config/waybar/control-center.py",
+        "on-click-right": "pavucontrol",
+        "on-click-middle": "pamixer -t",
         "scroll-step": 5
     },
     
@@ -101,6 +104,7 @@
     "tooltip-format-discharging": "{power:>1.0f}W↓ {capacity}%",
     "tooltip-format-charging": "{power:>1.0f}W↑ {capacity}%",
     "interval": 5,
+    "on-click": "python3 /home/chips/.config/waybar/control-center.py",
     "states": {
         "warning": 30,
         "critical": 15
