@@ -12,6 +12,7 @@ Run the installer with sudo from the repo root:
 sudo ./install.sh
 ```
 
+
 Notes:
 - Uses **yay** for AUR packages.
 - Disables **sddm** and enables **greetd**.
