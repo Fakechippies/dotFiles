@@ -10,6 +10,7 @@ hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
 hl.env("WLR_NO_HARDWARE_CURSORS", "1")
 
 -- General Wayland
+hl.env("GTK_THEME", "Adwaita:dark")
 hl.env("QT_QPA_PLATFORM", "wayland")
 hl.env("QT_WAYLAND_DISABLE_WINDOWDECORATION", "1")
 hl.env("MOZ_ENABLE_WAYLAND", "1")

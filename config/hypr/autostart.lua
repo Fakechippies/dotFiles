@@ -5,8 +5,9 @@
 hl.on("hyprland.start", function()
     hl.exec_cmd("waybar")
     hl.exec_cmd("mako")
-    hl.exec_cmd("python3 /home/chips/.config/waybar/clipboard-daemon.py")
+    hl.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/waybar/clipboard-daemon.py")
     hl.exec_cmd("hyprpaper --config ~/.config/hypr/hyprpaper.conf")
-    hl.exec_cmd("gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita'")
+    hl.exec_cmd("gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark'")
+    hl.exec_cmd("gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'")
 end)
 

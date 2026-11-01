@@ -32,7 +32,7 @@ window#waybar {
 }
 
 #custom-launcher {
-    background-image: url("/home/chips/.config/waybar/aot-wing.svg");
+    background-image: url("aot-wing.svg");
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;

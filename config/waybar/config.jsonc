@@ -49,7 +49,7 @@
         "interval": 5,
         "format": "󰍛",
         "tooltip-format": "{usage}%",
-        "on-click": "python3 /home/chips/.config/waybar/control-center.py",
+        "on-click": "python3 ~/.config/waybar/control-center.py",
         "on-click-right": "ghostty -e btop"
     },
     
@@ -58,7 +58,7 @@
         "format-disabled": "󰂲",
         "format-connected": "󰂱",
         "tooltip-format": "Devices connected: {num_connections}",
-        "on-click": "python3 /home/chips/.config/waybar/control-center.py",
+        "on-click": "python3 ~/.config/waybar/control-center.py",
         "on-click-right": "blueman-manager"
     },
     
@@ -72,7 +72,7 @@
         "tooltip-format-ethernet": "⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
         "tooltip-format-disconnected": "Disconnected",
         "interval": 3,
-        "on-click": "python3 /home/chips/.config/waybar/control-center.py",
+        "on-click": "python3 ~/.config/waybar/control-center.py",
         "on-click-right": "nm-connection-editor"
     },
     
@@ -83,7 +83,7 @@
 		"default": ["", "", ""]
         },
         "tooltip-format": "Playing at {volume}%",
-        "on-click": "python3 /home/chips/.config/waybar/control-center.py",
+        "on-click": "python3 ~/.config/waybar/control-center.py",
         "on-click-right": "pavucontrol",
         "on-click-middle": "pamixer -t",
         "scroll-step": 5
@@ -104,7 +104,7 @@
     "tooltip-format-discharging": "{power:>1.0f}W↓ {capacity}%",
     "tooltip-format-charging": "{power:>1.0f}W↑ {capacity}%",
     "interval": 5,
-    "on-click": "python3 /home/chips/.config/waybar/control-center.py",
+    "on-click": "python3 ~/.config/waybar/control-center.py",
     "states": {
         "warning": 30,
         "critical": 15
