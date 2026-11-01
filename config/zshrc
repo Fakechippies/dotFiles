@@ -15,7 +15,8 @@ alias exegol='sudo -E $HOME/.local/bin/exegol'
 export EDITOR=vim
 export SYSTEMD_EDITOR=vim
 
-gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita'
+gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark'
+gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
 export GOPATH=$HOME/go
 export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 alias packettracer='QT_QPA_PLATFORM=xcb /usr/lib/packettracer/packettracer.AppImage'
