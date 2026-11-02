@@ -296,7 +296,12 @@ class ControlCenter(Gtk.Window):
         hb.pack_start(self.tab_clip, True, True, 0)
         tab_card.pack_start(hb, False, False, 0)
         self.list_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-        tab_card.pack_start(self.list_container, False, False, 0)
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        scrolled.set_min_content_height(40)
+        scrolled.set_max_content_height(200)
+        scrolled.add(self.list_container)
+        tab_card.pack_start(scrolled, False, False, 0)
         outer.pack_start(tab_card, False, False, 0)
 
         self.current_tab = "notif"
@@ -396,6 +401,19 @@ class ControlCenter(Gtk.Window):
         ctx.add_class("on" if muted else "off")
         self._vol_lock = False
         return False
+
+    def copy_text(self, txt):
+        try:
+            subprocess.run(["wl-copy"], input=txt.encode("utf-8"), check=False)
+        except Exception:
+            pass
+
+    def copy_image(self, path):
+        try:
+            with open(path, "rb") as f:
+                subprocess.run(["wl-copy", "--type", "image/png"], stdin=f, check=False)
+        except Exception:
+            pass
 
     def media_cmd(self, cmd):
         sh(cmd)
@@ -516,10 +534,39 @@ class ControlCenter(Gtk.Window):
             if not items:
                 l = Gtk.Label(label="No clipboard history"); l.get_style_context().add_class("muted")
                 self.list_container.pack_start(l, False, False, 0)
-            for txt in items:
-                row = Gtk.Label(label=str(txt)[:100]); row.set_halign(Gtk.Align.START); row.set_line_wrap(True); row.set_max_width_chars(44)
-                row.get_style_context().add_class("list-row")
-                self.list_container.pack_start(row, False, False, 0)
+            for e in items:
+                if isinstance(e, str):
+                    e = {"type": "text", "text": e}
+                if e.get("type") == "image":
+                    path = e.get("path", "")
+                    hb = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+                    try:
+                        pb = GdkPixbuf.Pixbuf.new_from_file_at_scale(path, 48, 48, True)
+                        img = Gtk.Image.new_from_pixbuf(pb)
+                    except Exception:
+                        img = Gtk.Label(label="[img]")
+                    hb.pack_start(img, False, False, 0)
+                    lbl = Gtk.Label(label=os.path.basename(path))
+                    lbl.set_halign(Gtk.Align.START)
+                    lbl.get_style_context().add_class("muted")
+                    hb.pack_start(lbl, True, True, 0)
+                    btn = Gtk.Button()
+                    btn.get_style_context().add_class("text-btn")
+                    btn.add(hb)
+                    btn.connect("clicked", lambda _ , p=path: self.copy_image(p))
+                    self.list_container.pack_start(btn, False, False, 0)
+                else:
+                    txt = e.get("text", "")
+                    btn = Gtk.Button(label=txt[:80])
+                    btn.get_style_context().add_class("text-btn")
+                    btn.set_halign(Gtk.Align.FILL)
+                    ch = btn.get_child()
+                    if isinstance(ch, Gtk.Label):
+                        ch.set_xalign(0.0)
+                        ch.set_ellipsize(Pango.EllipsizeMode.END)
+                        ch.set_max_width_chars(40)
+                    btn.connect("clicked", lambda _ , t=txt: self.copy_text(t))
+                    self.list_container.pack_start(btn, False, False, 0)
         self.list_container.show_all()
 
     def destroy(self, *a):
