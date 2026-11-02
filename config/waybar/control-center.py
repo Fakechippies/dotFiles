@@ -40,6 +40,9 @@ MUTED = "#8a8a8a"
 
 CSS = """
 window.cc { background-image: none; background-color: #0d0d0d; color: #e8e8e8; font-family: 'JetBrainsMono Nerd Font'; }
+window.cc-toast { background-image: none; background-color: #0d0d0d; border: 2px solid #ff6a00; border-radius: 0; }
+.toast-label { color: #ff6a00; font-size: 11px; padding: 6px 12px; }
+window.cc-backdrop, .cc-backdrop { background-image: none; background-color: transparent; }
 .cc-box { background-image: none; background-color: #0d0d0d; border: 2px solid #ff6a00; border-radius: 0; padding: 8px; }
 .card { background-image: none; background-color: transparent; border: none; border-radius: 0; padding: 6px 0; margin: 0; }
 .row { margin-bottom: 4px; }
@@ -208,6 +211,18 @@ class ControlCenter(Gtk.Window):
         self.set_skip_taskbar_hint(True)
         self.set_skip_pager_hint(True)
         self.set_resizable(False)
+        # Size the scrollable list to at least half of the focused monitor's
+        # height so the clipboard/notification history gets real room.
+        mon_h = 1080
+        try:
+            mons = json.loads(subprocess.check_output(["hyprctl", "monitors", "-j"], stderr=subprocess.DEVNULL).decode())
+            for m in mons:
+                if m.get("focused"):
+                    mon_h = int(m.get("height", mon_h))
+                    break
+        except Exception:
+            pass
+        self._list_min_height = max(300, int(mon_h * 0.5))
         self.set_default_size(360, -1)
 
         # anchor as a top-right layer-shell popup
@@ -299,10 +314,14 @@ class ControlCenter(Gtk.Window):
         scrolled = Gtk.ScrolledWindow()
         scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         scrolled.set_min_content_height(40)
-        scrolled.set_max_content_height(200)
+        scrolled.set_max_content_height(self._list_min_height)
+        scrolled.set_propagate_natural_height(True)
+        scrolled.set_vexpand(False)
+        scrolled.set_hexpand(True)
         scrolled.add(self.list_container)
-        tab_card.pack_start(scrolled, False, False, 0)
-        outer.pack_start(tab_card, False, False, 0)
+        tab_card.pack_start(scrolled, True, True, 0)
+        outer.pack_start(tab_card, True, True, 0)
+        self.list_scrolled = scrolled
 
         self.current_tab = "notif"
         self.tab_notif.get_style_context().add_class("active")
@@ -313,10 +332,123 @@ class ControlCenter(Gtk.Window):
         self._media_art_url = None
 
         self.refresh_media()
+        self._backdrops = []
+        self._make_backdrops()
+        self._make_toast()
         self.show_all()
         self.refresh_all()
         GLib.timeout_add(2000, self.refresh_all)
         GLib.timeout_add(3000, self.refresh_media)
+
+    def _make_backdrops(self):
+        """Full-screen transparent surfaces that close the popup on outside click."""
+        display = Gdk.Display.get_default()
+        if display is None:
+            return
+        for i in range(display.get_n_monitors()):
+            monitor = display.get_monitor(i)
+            if monitor is None:
+                continue
+            w = Gtk.Window()
+            w.set_decorated(False)
+            w.set_skip_taskbar_hint(True)
+            w.set_skip_pager_hint(True)
+            w.set_accept_focus(False)
+            w.set_can_focus(False)
+            w.set_app_paintable(True)
+            visual = w.get_screen().get_rgba_visual()
+            if visual is not None:
+                w.set_visual(visual)
+            w.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 0, 0, 0))
+            w.get_style_context().add_class("cc-backdrop")
+            geo = monitor.get_geometry()
+            w.set_default_size(geo.width, geo.height)
+            GtkLayerShell.init_for_window(w)
+            GtkLayerShell.set_layer(w, GtkLayerShell.Layer.OVERLAY)
+            GtkLayerShell.set_monitor(w, monitor)
+            for edge in (GtkLayerShell.Edge.TOP, GtkLayerShell.Edge.BOTTOM,
+                         GtkLayerShell.Edge.LEFT, GtkLayerShell.Edge.RIGHT):
+                GtkLayerShell.set_anchor(w, edge, True)
+            GtkLayerShell.set_exclusive_zone(w, -1)
+            GtkLayerShell.set_namespace(w, "control-center-backdrop")
+            GtkLayerShell.set_keyboard_mode(w, GtkLayerShell.KeyboardMode.NONE)
+            eb = Gtk.EventBox()
+            eb.get_style_context().add_class("cc-backdrop")
+            eb.connect("button-press-event", self._on_backdrop_click)
+            w.add(eb)
+            w.show_all()
+            self._backdrops.append(w)
+
+    def _on_backdrop_click(self, *_):
+        self.destroy()
+        return True
+
+    def _make_toast(self):
+        """Small popup that appears just below the control center."""
+        w = Gtk.Window()
+        w.set_decorated(False)
+        w.set_resizable(False)
+        w.set_skip_taskbar_hint(True)
+        w.set_skip_pager_hint(True)
+        w.set_accept_focus(False)
+        w.set_can_focus(False)
+        w.get_style_context().add_class("cc-toast")
+        GtkLayerShell.init_for_window(w)
+        GtkLayerShell.set_layer(w, GtkLayerShell.Layer.OVERLAY)
+        GtkLayerShell.set_anchor(w, GtkLayerShell.Edge.TOP, True)
+        GtkLayerShell.set_anchor(w, GtkLayerShell.Edge.RIGHT, True)
+        GtkLayerShell.set_margin(w, GtkLayerShell.Edge.RIGHT, 8)
+        GtkLayerShell.set_margin(w, GtkLayerShell.Edge.TOP, 100)
+        GtkLayerShell.set_exclusive_zone(w, -1)
+        GtkLayerShell.set_namespace(w, "control-center-toast")
+        GtkLayerShell.set_keyboard_mode(w, GtkLayerShell.KeyboardMode.NONE)
+        self.toast_label = Gtk.Label(label="Copied to clipboard")
+        self.toast_label.get_style_context().add_class("toast-label")
+        w.add(self.toast_label)
+        self._toast = w
+        self._toast_timer = None
+
+    def _cc_bottom(self):
+        try:
+            data = json.loads(subprocess.check_output(
+                ["hyprctl", "layers", "-j"], stderr=subprocess.DEVNULL).decode())
+            for monitor in data.values():
+                for surfaces in monitor.get("levels", {}).values():
+                    for s in surfaces:
+                        if s.get("namespace") == "control-center":
+                            return int(s.get("y", 0)) + int(s.get("h", 0))
+        except Exception:
+            pass
+        return 34 + self.get_allocated_height()
+
+    def show_toast(self, text="Copied to clipboard"):
+        if not hasattr(self, "_toast"):
+            return
+        self.toast_label.set_text(text)
+        top = self._cc_bottom() + 6
+        GtkLayerShell.set_margin(self._toast, GtkLayerShell.Edge.TOP, top)
+        if self._toast_timer is not None:
+            GLib.source_remove(self._toast_timer)
+            self._toast_timer = None
+        self._toast.set_opacity(1.0)
+        self._toast.show_all()
+        self._toast_timer = GLib.timeout_add(1500, self._fade_toast)
+
+    def _fade_toast(self):
+        self._toast_timer = None
+        steps = 8
+
+        def step(i=0):
+            if i >= steps:
+                self._toast.hide()
+                self._toast.set_opacity(1.0)
+                return False
+            self._toast.set_opacity(1.0 - float(i + 1) / steps)
+            GLib.timeout_add(30, step, i + 1)
+            return False
+
+        step()
+        return False
 
     def make_sep(self):
         b = Gtk.Box()
@@ -404,14 +536,18 @@ class ControlCenter(Gtk.Window):
 
     def copy_text(self, txt):
         try:
-            subprocess.run(["wl-copy"], input=txt.encode("utf-8"), check=False)
+            r = subprocess.run(["wl-copy"], input=txt.encode("utf-8"), check=False)
+            if r.returncode == 0:
+                self.show_toast("✓ Copied to clipboard")
         except Exception:
             pass
 
     def copy_image(self, path):
         try:
             with open(path, "rb") as f:
-                subprocess.run(["wl-copy", "--type", "image/png"], stdin=f, check=False)
+                r = subprocess.run(["wl-copy", "--type", "image/png"], stdin=f, check=False)
+            if r.returncode == 0:
+                self.show_toast("✓ Image copied to clipboard")
         except Exception:
             pass
 
@@ -505,8 +641,16 @@ class ControlCenter(Gtk.Window):
         ctx_c = self.tab_clip.get_style_context()
         if name == "notif":
             ctx_n.add_class("active"); ctx_c.remove_class("active")
+            # Shrink to fit notifications; grow as new ones arrive.
+            self.list_scrolled.set_propagate_natural_height(True)
+            self.list_scrolled.set_min_content_height(40)
+            self.list_scrolled.set_max_content_height(self._list_min_height)
         else:
             ctx_c.add_class("active"); ctx_n.remove_class("active")
+            # Clipboard gets the full half-screen list.
+            self.list_scrolled.set_propagate_natural_height(False)
+            self.list_scrolled.set_min_content_height(self._list_min_height)
+            self.list_scrolled.set_max_content_height(-1)
         self.populate_tab()
 
     def populate_tab(self):
